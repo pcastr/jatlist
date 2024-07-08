@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from jatlist_api.app import app
 from jatlist_api.database import get_session
 from jatlist_api.models import User, table_registry
+from jatlist_api.security import get_password_hash
 
 
 @pytest.fixture
@@ -37,9 +38,26 @@ def session():
 
 @pytest.fixture
 def user(session):
-    user = User(username='Alice', email='alice@example.com', password='secret')
+    pwd = 'secret'
+    user = User(
+        username='Alice',
+        email='alice@example.com',
+        password=get_password_hash(pwd),
+    )
     session.add(user)
     session.commit()
     session.refresh(user)
 
+    user.clean_password = pwd
+
     return user
+
+
+@pytest.fixture
+def token(client, user):
+    response = client.post(
+        '/token',
+        data={'username': user.email, 'password': user.clean_password},
+    )
+
+    return response.json()['access_token']
