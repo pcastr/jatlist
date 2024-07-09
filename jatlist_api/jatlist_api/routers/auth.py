@@ -8,12 +8,17 @@ from sqlalchemy.orm import Session
 
 from jatlist_api.database import get_session
 from jatlist_api.models import User
-from jatlist_api.security import create_access_token, verify_password
+from jatlist_api.security import (
+    create_access_token,
+    get_current_user,
+    verify_password,
+)
 
 router = APIRouter(prefix='/auth', tags=['auth'])
 
 T_Session = Annotated[Session, Depends(get_session)]
 T_OauthForm = Annotated[OAuth2PasswordRequestForm, Depends()]
+T_CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
 @router.post('/token')
@@ -32,3 +37,11 @@ def login_for_access_token(
     access_token = create_access_token(data={'sub': user.email})
 
     return {'access_token': access_token, 'token_type': 'Bearer'}
+
+
+@router.post('/refresh_token')
+def refresh_access_token(
+    user: T_CurrentUser,
+):
+    new_access_token = create_access_token(data={'sub': user.email})
+    return {'access_token': new_access_token, 'token_type': 'Bearer'}

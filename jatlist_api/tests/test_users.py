@@ -32,7 +32,7 @@ def test_create_user_username_exists(client, user):
     response = client.post(
         '/users/',
         json={
-            'username': 'Alice',
+            'username': f'{user.username}',
             'email': 'alice@example.com',
             'password': 'secret',
         },
@@ -47,7 +47,7 @@ def test_create_user_email_exists(client, user):
         '/users/',
         json={
             'username': 'bob',
-            'email': 'alice@example.com',
+            'email': f'{user.email}',
             'password': 'secret',
         },
     )
@@ -70,32 +70,32 @@ def test_read_users_with_users(client, user):
     assert response.json() == {'users': [user_schema]}
 
 
-def test_update_user(client, user, token):
+def test_update_user(client, user, other_user, token):
     response = client.put(
         f'/users/{user.id}',
         headers={'Authorization': f'Bearer {token}'},
         json={
-            'username': 'bob',
-            'email': 'bob@example.com',
-            'password': 'mynewpassword',
+            'username': f'{user.username}',
+            'email': f'{user.email}',
+            'password': f'{other_user.password}',
         },
     )
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
-        'username': 'bob',
-        'email': 'bob@example.com',
-        'id': 1,
+        'username': f'{user.username}',
+        'email': f'{user.email}',
+        'id': user.id,
     }
 
 
-def test_update_wrong_user(client, user, token):
+def test_update_wrong_user(client, other_user, token):
     response = client.put(
-        f'/users/{user.id + 1}',
+        f'/users/{other_user.id}',
         headers={'Authorization': f'Bearer {token}'},
         json={
-            'username': 'bob',
-            'email': 'bob@example.com',
-            'password': 'mynewpassword',
+            'username': f'{other_user.username}',
+            'email': f'{other_user.email}',
+            'password': f'{other_user.password}',
         },
     )
 
@@ -108,14 +108,14 @@ def test_read_user(client, user):
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
-        'username': 'Alice',
-        'email': 'alice@example.com',
-        'id': 1,
+        'username': f'{user.username}',
+        'email': f'{user.email}',
+        'id': user.id,
     }
 
 
-def test_read_user_not_found(client):
-    respose = client.get('/users/100')
+def test_read_user_not_found(client, other_user):
+    respose = client.get(f'/users/{other_user.id + 1}')
 
     assert respose.status_code == HTTPStatus.NOT_FOUND
 
@@ -129,9 +129,9 @@ def test_delete_user(client, user, token):
     assert response.json() == {'message': 'User deleted'}
 
 
-def test_delete_wrong_use(client, user, token):
+def test_delete_wrong_use(client, other_user, token):
     response = client.delete(
-        f'/users/{user.id + 1}', headers={'Authorization': f'Bearer {token}'}
+        f'/users/{other_user.id}', headers={'Authorization': f'Bearer {token}'}
     )
 
     assert response.status_code == HTTPStatus.FORBIDDEN
