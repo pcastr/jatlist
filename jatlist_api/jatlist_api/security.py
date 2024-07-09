@@ -13,15 +13,15 @@ from zoneinfo import ZoneInfo
 
 from jatlist_api.database import get_session
 from jatlist_api.models import User
+from jatlist_api.settings import Settings
 
 pwd_context = PasswordHash.recommended()
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='auth/token')
 
-SECRET_KEY = 'your_secret_key'
-ALGORITHM = 'HS256'
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
+SECRET_KEY = Settings().SECRET_KEY
+ALGORITHM = Settings().ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = Settings().ACCESS_TOKEN_EXPIRE_MINUTES
 
 
 def get_password_hash(password: str):
